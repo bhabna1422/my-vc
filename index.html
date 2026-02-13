@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PIPELINE_STATUS: ETERNAL_LOVE</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --devops-blue: #00a8ff; 
+            --devops-green: #00ff41; 
+            --heart-red: #ff2d55; 
+        }
+        body { 
+            margin: 0; background: #010103; color: white; 
+            font-family: 'JetBrains Mono', monospace; overflow-x: hidden; 
+        }
+        .grafana-container {
+    position: fixed; top: 80px; right: 140px; width: 400px;
+    background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 255, 65, 0.3);
+    padding: 10px; z-index: 100; font-family: 'JetBrains Mono', monospace;
+}
+.graph-header { display: flex; justify-content: space-between; font-size: 10px; color: #00ff41; margin-bottom: 5px; }
+.status-indicator { animation: blink 1s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+#heartbeat-graph { width: 100%; height: 60px; stroke: #ff2d55; stroke-width: 2; fill: none; }
+
+.graph-footer { display: flex; justify-content: space-between; font-size: 9px; color: #666; margin-top: 5px; }
+        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+
+        /* The Pipeline Rail */
+        .pipeline-rail {
+            position: fixed; left: 60px; top: 0; width: 4px; height: 100vh;
+            background: rgba(255,255,255,0.05); z-index: 10;
+        }
+        .rail-progress { 
+            position: absolute; top: 0; width: 100%; 
+            background: var(--heart-red); height: 0%; 
+            box-shadow: 0 0 20px var(--heart-red); 
+        }
+
+        /* Content Modules */
+        section { min-height: 120vh; padding-left: 140px; display: flex; align-items: center; position: relative; }
+
+        .devops-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            padding: 2.5rem; border-radius: 8px;
+            max-width: 700px; transform: translateX(-30px); opacity: 0;
+            position: relative;
+        }
+
+        .status-badge {
+            display: inline-block; padding: 4px 12px; font-size: 11px;
+            background: var(--devops-green); color: #000; font-weight: bold; margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .image-container {
+            width: 100%; height: 645px; border: 1px solid rgba(255,255,255,0.1);
+            margin: 20px 0; overflow: hidden;
+        }
+        .image-container img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); transition: 0.8s ease; }
+        .devops-card:hover img { filter: grayscale(0) contrast(1.1); transform: scale(1.02); }
+
+        .log-stream { font-size: 12px; color: #777; border-top: 1px solid rgba(255,255,255,0.1); pt: 15px; }
+        .log-entry { margin: 5px 0; }
+        .log-entry.success { color: var(--devops-green); }
+        .log-entry.info { color: var(--devops-blue); }
+
+        /* Heartbeat Pulse */
+        .heart-pulse {
+            width: 12px; height: 12px; background: var(--heart-red);
+            border-radius: 50%; position: absolute; left: -84px; top: 50%;
+            transform: translateY(-50%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 45, 85, 0.7); }
+            70% { transform: translateY(-50%) scale(1.5); box-shadow: 0 0 0 10px rgba(255, 45, 85, 0); }
+            100% { transform: translateY(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 45, 85, 0); }
+        }
+
+        .big-footer { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="grafana-container">
+    <div class="graph-header">
+        <span>LIVE_METRIC: AFFECTION_LATENCY (ms)</span>
+        <span class="status-indicator">● LIVE</span>
+    </div>
+    <svg id="heartbeat-graph" viewBox="0 0 1000 100"></svg>
+    <div class="graph-footer">
+        <span>MIN: 0ms</span>
+        <span>MAX: 0.0001ms</span>
+        <span>AVG: 0ms</span>
+    </div>
+</div>
+    <div class="pipeline-rail"><div class="rail-progress" id="progress"></div></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <section>
+        <div class="devops-card">
+            <div class="heart-pulse"></div>
+            <div class="status-badge">Phase: Requirement_Analysis</div>
+            <h2>Searching for the "One"</h2>
+            <div class="image-container"><img src="1.jpeg" alt="Initial Stage"></div>
+            <div class="log-stream">
+                <div class="log-entry info">[INFO] Scanning global network for compatible soul_module...</div>
+                <div class="log-entry success">[SUCCESS] Target found: Bhabana.init()</div>
+                <div class="log-entry">[LOG] High affinity detected in core values. Skipping further search.</div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="devops-card">
+            <div class="heart-pulse"></div>
+            <div class="status-badge">Phase: Unit_Testing</div>
+            <h2>The Interaction</h2>
+            <div class="image-container"><img src="3.jpeg" alt="Meeting"></div>
+            <div class="log-stream">
+                <div class="log-entry info">[INFO] Running sanity checks on first conversation...</div>
+                <div class="log-entry success">[PASS] Shared humor: 100% | Eye contact: Stable</div>
+                <div class="log-entry">[LOG] Heartbeat frequency increased by 40ms. Not a bug, it's a feature.</div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="devops-card">
+            <div class="heart-pulse"></div>
+            <div class="status-badge" style="background: var(--devops-blue);">Phase: Containerization</div>
+            <h2>Wrapping Our Worlds Together</h2>
+            <div class="image-container"><img src="2.jpeg" alt="Shared Life"></div>
+            <div class="log-stream">
+                <div class="log-entry info">[INFO] Packaging shared memories into Docker Image: LOVE_v1.0</div>
+                <div class="log-entry">[LOG] Dependencies: Coffee, Late-night calls, and deep trust.</div>
+                <div class="log-entry success">[PASS] Environment: "Everything is better when we are together."</div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="devops-card">
+            <div class="heart-pulse"></div>
+            <div class="status-badge" style="background: #f1c40f; color: #000;">Phase: Security_&_Patching</div>
+            <h2>Fixed Every Bug, Together</h2>
+            <div class="image-container"><img src="4.jpeg" alt="Support"></div>
+            <div class="log-stream">
+                <div class="log-entry info">[INFO] Patching vulnerabilities during hard times...</div>
+                <div class="log-entry success">[FIXED] Loneliness was removed by Bhabana's presence.</div>
+                <div class="log-entry">[LOG] System Security: "Your hug is my firewall."</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="big-footer">
+        <h1 style="font-size: 4rem; margin: 0; color: var(--heart-red);">DEPLOYED TO PROD</h1>
+        <p style="letter-spacing: 10px; opacity: 0.6;">UPTIME: FOREVER</p>
+        <div class="devops-card" style="margin-top: 50px; opacity: 1; transform: none;">
+            <p style="font-size: 1.2rem;">
+                "You are the most important deployment of my life. <br>
+                May our love never have a downtime, <br>
+                and our connection stay high-bandwidth."
+            </p>
+            <h3 style="color: var(--devops-green);">Happy Valentine's Day!</h3>
+        </div>
+         <div class="terminal-box" style="width: 80%; max-width: 600px; text-align: left; border: 1px solid var(--devops-green); background: rgba(0,0,0,0.8); padding: 20px; box-shadow: 0 0 20px rgba(0,255,65,0.2);">
+            <div style="color: var(--devops-green); margin-bottom: 10px;">// Interactive Relationship Terminal v1.0</div>
+            <div id="terminal-output" style="height: 150px; overflow-y: auto; font-size: 14px; margin-bottom: 10px; color: #aaa;">
+                Type 'help' to see available commands...
+            </div>
+            <div style="display: flex; align-items: center; color: var(--devops-green);">
+                <span>root@Bhabana_heart:~$&nbsp;</span>
+                <input type="text" id="terminal-input" autofocus style="background: transparent; border: none; color: var(--devops-green); outline: none; font-family: 'JetBrains Mono'; width: 100%;">
+            </div>
+        </div>
+    </section>
+   
+
+    <script>
+    // --- THE TERMINAL BOOT SEQUENCE ---
+const bootLogs = [
+    "INITIALIZING Bhabana_OS_v2.14...",
+    "MOUNTING /dev/heart... [OK]",
+    "VERIFYING PARTNER_AUTH_KEYS... [OK]",
+    "ESTABLISHING SECURE_TUNNEL... [OK]",
+    "CHECKING DATABASE: shared_memories.db... [STABLE]",
+    "STARTING DEPLOYMENT: Valentine_2026...",
+    "SYSTEM READY. WELCOME, ROOT."
+];
+
+let logIndex = 0;
+function playBootSequence() {
+    if (logIndex < bootLogs.length) {
+        const output = document.getElementById('terminal-output');
+        output.innerHTML += `<div style="color: #888;">[${new Date().toLocaleTimeString()}] ${bootLogs[logIndex]}</div>`;
+        logIndex++;
+        output.scrollTop = output.scrollHeight;
+        setTimeout(playBootSequence, 600);
+    }
+}
+
+// --- FULL DEVOPS COMMAND LIBRARY ---
+const commands = {
+    // Standard Linux
+    'ls -la': 'total 520<br>drwxr-xr-x&nbsp;&nbsp;Bhabana&nbsp;&nbsp;staff&nbsp;&nbsp;.trust<br>drwxr-xr-x&nbsp;&nbsp;Bhabana&nbsp;&nbsp;staff&nbsp;&nbsp;.patience<br>-rw-r--r--&nbsp;&nbsp;Bhabana&nbsp;&nbsp;staff&nbsp;&nbsp;future_plans.yaml<br>-rw-r--r--&nbsp;&nbsp;Bhabana&nbsp;&nbsp;staff&nbsp;&nbsp;our_photos.zip',
+    'top': 'PID: 1 | USER: Bhabana | %CPU: 100.0 (Thinking of you) | %MEM: 99.9 (Memories) | TIME+: ∞',
+    'status': '[SYSTEM_STABLE] Heartbeat: Nominal. Love levels: Critical Peak.',
+    'history': '1. First Meet<br>2. Deployment of Trust<br>3. Scaling Happiness<br>4. Valentine_2026.deploy()',
+    'ping': '64 bytes from Bhabana_Heart (127.0.0.1): icmp_seq=1 ttl=64 time=0.001ms',
+    'ssh': 'Establishing secure connection to partner@heart... <br>Warning: You are already at home here.',
+    'tail -f': '[STREAMING LOGS] <br> [INFO] Affection levels rising...<br> [INFO] Smile detected...<br> [INFO] Scaling happiness to 300%...',
+    'chmod +r love': 'Access changed: Love is now globally readable and persistent.',
+
+    // Kubernetes (The DevOps Core)
+    'kubectl get pods': 'NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;READY&nbsp;&nbsp;&nbsp;STATUS&nbsp;&nbsp;&nbsp;&nbsp;RESTARTS&nbsp;&nbsp;&nbsp;AGE<br>pod/our-future&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1/1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Running&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;∞<br>pod/late-night-talks&nbsp;1/1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Running&nbsp;&nbsp;&nbsp;0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;365d',
+    'kubectl describe pod': 'Labels: app=love, env=prod <br>Conditions: Ready=True, Scheduled=True <br>Events: <br> - Started container our-life',
+    
+    // Docker
+    'docker ps': 'CONTAINER ID&nbsp;&nbsp;&nbsp;IMAGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NAMES<br>d4af37e1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;forever_v2.14&nbsp;&nbsp;Production_Love',
+    'docker images': 'REPOSITORY&nbsp;&nbsp;&nbsp;TAG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SIZE<br>Bhabana/Us&nbsp;&nbsp;latest&nbsp;&nbsp;&nbsp;&nbsp;Infinite',
+
+    // Infrastructure & Git
+    'terraform plan': '<span style="color: #00ff41">Plan: 1 to add (Next Trip), 0 to change, 0 to destroy.</span>',
+    'terraform apply': '<span style="color: #00ff41">Apply complete! Resources: 1 added, 0 changed, 0 destroyed.</span>',
+    'git log': 'commit af829... "Initial commit of us"<br>commit be210... "Added long-term support"',
+    'git push origin main': 'Everything up-to-date. <br>Branch "main" synced with "Bhabana/Heart".',
+
+    // The Special Ones
+    'rm -rf fights': '<span style="color: #ff2d55">Permission Denied: [Fights] not found. Only [Love] is in sudoers file.</span>',
+    'sudo unlock_love': '<span style="color: #ff2d55; font-weight: bold;">ACCESS GRANTED. Message: I love you more than 100% test coverage!</span>',
+    'help': 'Try these: status, top, ls -la, ping, history, kubectl get pods, docker ps, terraform plan, git log, tail -f, rm -rf fights, sudo unlock_love'
+};
+
+// --- TERMINAL EVENT LISTENER ---
+window.onload = () => {
+    playBootSequence(); // Start the intro
+    const input = document.getElementById('terminal-input');
+    const output = document.getElementById('terminal-output');
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const cmd = input.value.trim().toLowerCase();
+            output.innerHTML += `<div style="color: #00ff41; margin-top: 10px;">root@Bhabana_heart:~$&nbsp;${cmd}</div>`;
+            
+            const response = commands[cmd] || `Command not found: ${cmd}. Type 'help' for available commands.`;
+            output.innerHTML += `<div>${response}</div>`;
+            
+            input.value = '';
+            output.scrollTop = output.scrollHeight;
+        }
+    });
+};
+    </script>
+
+    <script>
+        // --- THREE.JS BACKGROUND ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const geo = new THREE.IcosahedronGeometry(5, 1);
+        const mat = new THREE.MeshBasicMaterial({ color: 0xff2d55, wireframe: true, transparent: true, opacity: 0.1 });
+        const mesh = new THREE.Mesh(geo, mat);
+        scene.add(mesh);
+        camera.position.z = 10;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            mesh.rotation.y += 0.005;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // --- GSAP SCROLL LOGIC ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.to("#progress", {
+            height: "100%",
+            scrollTrigger: { scrub: 0.5, trigger: "body", start: "top top", end: "bottom bottom" }
+        });
+
+        gsap.utils.toArray(".devops-card").forEach(card => {
+            gsap.to(card, {
+                scrollTrigger: { trigger: card, start: "top 80%" },
+                x: 0, opacity: 1, duration: 1.2, ease: "expo.out"
+            });
+        });
+        const svg = document.getElementById('heartbeat-graph');
+let points = [];
+let totalPoints = 100;
+
+function updateGraph() {
+    // Generate a "Heartbeat" pulse pattern
+    let time = Date.now() * 0.01;
+    let y = 50 + Math.sin(time) * 20; // Base wave
+    
+    // Add a sharp "heartbeat" spike every few seconds
+    if (Math.floor(Date.now() / 1000) % 2 === 0 && Math.random() > 0.8) {
+        y -= 30; 
+    }
+
+    points.push(y);
+    if (points.length > totalPoints) points.shift();
+
+    let pathData = "M " + points.map((p, i) => `${(i * 10)} ${p}`).join(" L ");
+    
+    // Create the SVG path
+    svg.innerHTML = `<path d="${pathData}" stroke="#ff2d55" fill="none" />`;
+    requestAnimationFrame(updateGraph);
+}
+updateGraph();
+    </script>
+</body>
+</html>
